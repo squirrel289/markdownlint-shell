@@ -1,0 +1,38 @@
+{
+  "name": "markdownlint-shell",
+  "version": "0.1.0",
+  "description": "Custom markdownlint rules for validating shell tree code fences and annotations.",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "exports": {
+    ".": "./dist/index.mjs"
+  },
+  "files": [
+    "dist",
+    "docs/rules",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run build && npm run test"
+  },
+  "keywords": [
+    "markdownlint",
+    "markdownlint-rule",
+    "shell",
+    "tree"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
