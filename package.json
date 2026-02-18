@@ -18,10 +18,10 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepare": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run build && npm run test"
+    "check": "npm run build && npm run test",
+    "docs:build": "node scripts/build-docs.mjs"
   },
   "keywords": [
     "markdownlint",
@@ -33,6 +33,7 @@
   "devDependencies": {
     "@types/node": "^24.3.0",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "marked": "^15.0.6"
   }
 }
