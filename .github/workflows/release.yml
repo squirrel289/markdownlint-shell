@@ -63,6 +63,8 @@ jobs:
         run: echo "NPM_TOKEN is not configured; skipping npm publish."
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload docs artifact
         uses: actions/upload-pages-artifact@v3
         with:
