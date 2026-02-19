@@ -21,7 +21,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run build && npm run test",
-    "docs:build": "node scripts/build-docs.mjs"
+    "docs:build": "node scripts/build-docs.mjs",
+    "prepare": "npm run build"
   },
   "keywords": [
     "markdownlint",
@@ -31,9 +32,11 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^24.3.0",
-    "typescript": "^5.9.2",
     "vitest": "^3.2.4",
     "marked": "^15.0.6"
+  },
+  "dependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
   }
 }
