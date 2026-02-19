@@ -17,7 +17,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npx --yes --package typescript@5.9.2 tsc -p tsconfig.json",
+    "build": "npx --yes --package typescript@5.9.2 --package @types/node@24.3.0 tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run build && npm run test",
