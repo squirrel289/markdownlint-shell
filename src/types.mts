@@ -38,8 +38,10 @@ export interface RuleConfig {
   annotations_file?: string;
 }
 
+export type CheckboxStateValue = string | number | boolean;
+
 export interface CheckboxStateMap {
-  [frontMatterKey: string]: string | string[];
+  [frontMatterKey: string]: CheckboxStateValue | CheckboxStateValue[];
 }
 
 export interface CheckboxStateCondition {

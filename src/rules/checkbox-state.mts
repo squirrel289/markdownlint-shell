@@ -1,11 +1,14 @@
+import { parse as parseYaml } from "yaml";
+
 import type {
+  CheckboxStateValue,
   CheckboxStateCondition,
   MarkdownlintRule,
   MarkdownlintRuleParams,
   WorkItemRuleConfig,
 } from "../types.mjs";
 
-type FrontMatterMap = Record<string, string>;
+type FrontMatterMap = Record<string, unknown>;
 type NormalizedCondition = {
   states: Record<string, string[]>;
   checked: boolean;
@@ -14,61 +17,116 @@ type NormalizedCondition = {
 const TASK_CHECKBOX_PATTERN =
   /^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+\[( |x|X)\](?:\s+|$)/;
 
-function parseScalar(value: string): string {
-  let normalized = value.trim();
-
-  if (!normalized) {
-    return "";
+function normalizeFrontMatterObject(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeFrontMatterObject(entry));
   }
 
-  if (
-    (normalized.startsWith('"') && normalized.endsWith('"')) ||
-    (normalized.startsWith("'") && normalized.endsWith("'"))
-  ) {
-    normalized = normalized.slice(1, -1);
-  } else {
-    normalized = normalized.replace(/\s+#.*$/, "").trim();
+  if (value && typeof value === "object") {
+    const normalized: Record<string, unknown> = {};
+    for (const [key, nestedValue] of Object.entries(value)) {
+      const normalizedKey = String(key || "")
+        .trim()
+        .toLowerCase();
+      if (!normalizedKey) {
+        continue;
+      }
+      normalized[normalizedKey] = normalizeFrontMatterObject(nestedValue);
+    }
+    return normalized;
   }
 
-  return normalized.trim();
+  return value;
 }
 
 function parseFrontMatter(frontMatterLines: string[]): FrontMatterMap {
-  const values: FrontMatterMap = {};
+  const contentLines = [...frontMatterLines];
+  const firstLine = contentLines[0]?.trim();
+  const lastLine = contentLines[contentLines.length - 1]?.trim();
 
-  for (const rawLine of frontMatterLines) {
-    const trimmed = rawLine.trim();
-    if (
-      !trimmed ||
-      trimmed === "---" ||
-      trimmed === "..." ||
-      trimmed.startsWith("#")
-    ) {
-      continue;
-    }
-
-    const match = rawLine.match(/^\s*([A-Za-z0-9_-]+)\s*:\s*(.*?)\s*$/);
-    if (!match) {
-      continue;
-    }
-
-    values[match[1].toLowerCase()] = parseScalar(match[2]);
+  if (firstLine === "---" || firstLine === "...") {
+    contentLines.shift();
   }
 
-  return values;
+  if (lastLine === "---" || lastLine === "...") {
+    contentLines.pop();
+  }
+
+  const rawContent = contentLines.join("\n").trim();
+  if (!rawContent) {
+    return {};
+  }
+
+  try {
+    const parsed = parseYaml(rawContent) as unknown;
+    const normalized = normalizeFrontMatterObject(parsed);
+
+    if (
+      !normalized ||
+      typeof normalized !== "object" ||
+      Array.isArray(normalized)
+    ) {
+      return {};
+    }
+
+    return normalized as FrontMatterMap;
+  } catch {
+    return {};
+  }
 }
 
-function normalizeConditionValues(value: string | string[]): Set<string> {
+function normalizeConditionValues(
+  value: CheckboxStateValue | CheckboxStateValue[],
+): Set<string> {
   const valuesArray = Array.isArray(value) ? value : [value];
   return new Set(
     valuesArray
       .map((item) =>
-        String(item || "")
+        String(item ?? "")
           .trim()
           .toLowerCase(),
       )
       .filter((item) => item.length > 0),
   );
+}
+
+function getFrontMatterValue(
+  frontMatter: FrontMatterMap,
+  keyPath: string,
+): unknown {
+  const path = String(keyPath || "")
+    .split(".")
+    .map((segment) => segment.trim().toLowerCase())
+    .filter((segment) => segment.length > 0);
+  if (path.length === 0) {
+    return undefined;
+  }
+
+  let current: unknown = frontMatter;
+  for (const segment of path) {
+    if (!current || typeof current !== "object" || Array.isArray(current)) {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[segment];
+  }
+
+  return current;
+}
+
+function normalizeValueForMatch(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value.trim().toLowerCase();
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value).trim().toLowerCase();
+  }
+
+  return "";
 }
 
 function normalizeConditions(
@@ -118,9 +176,9 @@ function getExpectedCheckboxState(
   for (const condition of normalizedConditions) {
     const matchedAll = Object.entries(condition.states).every(
       ([field, expectedValues]) => {
-        const frontMatterValue = String(frontMatter[field] || "")
-          .trim()
-          .toLowerCase();
+        const frontMatterValue = normalizeValueForMatch(
+          getFrontMatterValue(frontMatter, field),
+        );
         if (!frontMatterValue) {
           return false;
         }

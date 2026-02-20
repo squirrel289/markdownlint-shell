@@ -277,3 +277,62 @@ test("uses first matching condition in order", () => {
   expect(errors).toHaveLength(1);
   expect(String(errors[0]?.detail || "")).toContain("must be unchecked");
 });
+
+test("matches nested frontmatter values via dot-path keys", () => {
+  const doc = makeDocument(
+    [
+      "status: completed",
+      "compliance:",
+      "  profiles:",
+      "    fisma:",
+      "      certification: true",
+    ],
+    ["- [ ] this must be checked"],
+  );
+  const errors = runRule({
+    ...doc,
+    config: {
+      conditions: [
+        {
+          states: {
+            "compliance.profiles.fisma.certification": true,
+            status: "completed",
+          },
+          checked: true,
+        },
+      ],
+    },
+  });
+
+  expect(errors).toHaveLength(1);
+  expect(errors[0]?.lineNumber).toBe(1);
+});
+
+test("does not match dot-path condition when nested value differs", () => {
+  const doc = makeDocument(
+    [
+      "status: completed",
+      "compliance:",
+      "  profiles:",
+      "    fisma:",
+      "      certification: false",
+    ],
+    ["- [ ] allowed because condition does not match"],
+  );
+  const errors = runRule({
+    ...doc,
+    config: {
+      conditions: [
+        {
+          states: {
+            "compliance.profiles.fisma.certification": true,
+            status: "completed",
+          },
+          checked: true,
+        },
+      ],
+    },
+  });
+
+  expect(errors).toHaveLength(0);
+});

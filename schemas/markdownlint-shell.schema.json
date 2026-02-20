@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/squirrel289/markdownlint-shell/main/schemas/markdownlint-shell.schema.json",
+  "title": "markdownlint-shell config schema",
+  "description": "Schema for markdownlint config files that use markdownlint-shell custom rules.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "SH004": {
+      "$ref": "#/$defs/sh004Config"
+    }
+  },
+  "$defs": {
+    "scalar": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "scalarOrScalarArray": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/scalar"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/scalar"
+          }
+        }
+      ]
+    },
+    "sh004States": {
+      "type": "object",
+      "description": "Frontmatter key/value matchers. Keys in this object are ANDed; values in an array are ORed. Keys may use dot-path notation for nested frontmatter values.",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_.-]+$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/scalarOrScalarArray"
+      }
+    },
+    "sh004Condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "states",
+        "checked"
+      ],
+      "properties": {
+        "states": {
+          "$ref": "#/$defs/sh004States"
+        },
+        "checked": {
+          "type": "boolean",
+          "description": "Expected checkbox state for matching documents. true => [x], false => [ ]."
+        }
+      }
+    },
+    "sh004Config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scan_fenced_code": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, scan fenced code blocks for task checkboxes. Default is false."
+        },
+        "conditions": {
+          "type": "array",
+          "description": "Ordered condition list. Conditions are ORed and first match wins.",
+          "items": {
+            "$ref": "#/$defs/sh004Condition"
+          }
+        }
+      },
+      "required": [
+        "conditions"
+      ],
+      "description": "SH004 uses: conditions OR, keys in states AND, values per key OR."
+    }
+  },
+  "examples": [
+    {
+      "SH004": {
+        "scan_fenced_code": false,
+        "conditions": [
+          {
+            "states": {
+              "status": [
+                "ready-for-review",
+                "completed"
+              ],
+              "state_reason": [
+                "completed",
+                "success"
+              ]
+            },
+            "checked": true
+          },
+          {
+            "states": {
+              "lifecycle": "draft",
+              "status": "proposed"
+            },
+            "checked": false
+          }
+        ]
+      }
+    }
+  ]
+}
