@@ -35,8 +35,21 @@ export interface MarkdownlintRule {
 }
 
 export interface RuleConfig {
-  include_backlog?: boolean;
   annotations_file?: string;
+}
+
+export interface CheckboxStateMap {
+  [frontMatterKey: string]: string | string[];
+}
+
+export interface CheckboxStateCondition {
+  states: CheckboxStateMap;
+  checked: boolean;
+}
+
+export interface WorkItemRuleConfig {
+  scan_fenced_code?: boolean;
+  conditions?: CheckboxStateCondition[];
 }
 
 export interface TreeBlock {

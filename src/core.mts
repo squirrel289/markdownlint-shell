@@ -235,14 +235,6 @@ function findRepoRoot(startPath: string): string {
   }
 }
 
-function shouldSkipMarkdown(markdownRelPath: string, config: RuleConfig): boolean {
-  const includeBacklog = typeof config.include_backlog === "boolean" ? config.include_backlog : false;
-  if (includeBacklog) {
-    return false;
-  }
-  return markdownRelPath.split("/").includes("backlog");
-}
-
 function parseYamlScalar(raw: string): string {
   const value = raw.trim();
   if (!value) {
@@ -810,7 +802,7 @@ function hasTreeFence(content: string): boolean {
   return /`{3,}\s*(?:bash|sh|zsh|shell)\s+tree\b/.test(content);
 }
 
-function resolveFileContext(fileName: string, config: RuleConfig): FileContext | null {
+function resolveFileContext(fileName: string): FileContext | null {
   const absolutePath = path.isAbsolute(fileName) ? fileName : path.resolve(process.cwd(), fileName);
   if (!fs.existsSync(absolutePath) || !fs.statSync(absolutePath).isFile()) {
     return null;
@@ -823,10 +815,6 @@ function resolveFileContext(fileName: string, config: RuleConfig): FileContext |
   const repoRoot = findRepoRoot(absolutePath);
   const markdownRelPath = toPosix(path.relative(repoRoot, absolutePath));
   if (markdownRelPath.startsWith("..") || path.isAbsolute(markdownRelPath)) {
-    return null;
-  }
-
-  if (shouldSkipMarkdown(markdownRelPath, config)) {
     return null;
   }
 
@@ -911,7 +899,7 @@ function analyzeContent(
 }
 
 export function analyzeMarkdownFile(fileName: string, config: RuleConfig = {}): AnalyzeResult | null {
-  const context = resolveFileContext(fileName, config);
+  const context = resolveFileContext(fileName);
   if (!context) {
     return null;
   }
@@ -969,7 +957,7 @@ export function synchronizeMarkdownContent(
 }
 
 export function synchronizeMarkdownFile(fileName: string, config: RuleConfig = {}): { updated: boolean; issues: TreeIssue[] } | null {
-  const context = resolveFileContext(fileName, config);
+  const context = resolveFileContext(fileName);
   if (!context) {
     return null;
   }

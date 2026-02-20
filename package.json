@@ -1,6 +1,6 @@
 {
   "name": "markdownlint-shell",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Custom markdownlint rules for validating shell tree code fences and annotations.",
   "type": "module",
   "main": "./dist/index.mjs",
@@ -17,7 +17,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "npx --yes --package typescript@5.9.2 --package @types/node@24.3.0 tsc -p tsconfig.json",
+    "build": "rm -rf dist && npx --yes --package typescript@5.9.2 --package @types/node@24.3.0 tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run build && npm run test",
